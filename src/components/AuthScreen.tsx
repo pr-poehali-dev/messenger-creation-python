@@ -24,7 +24,7 @@ const AuthScreen = ({ onLogin }: AuthScreenProps) => {
 
   const handleCodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code === '1234') {
+    if (code.length === 4) {
       const existingUser = localStorage.getItem(`user_${phone}`);
       if (existingUser) {
         onLogin(JSON.parse(existingUser));

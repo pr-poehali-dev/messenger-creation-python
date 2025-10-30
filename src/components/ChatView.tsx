@@ -11,6 +11,7 @@ interface ChatViewProps {
   user: { id: string; name: string };
   selectedChat: string | null;
   onSelectChat: (chatId: string) => void;
+  onViewProfile: (userId: string) => void;
 }
 
 interface Chat {
@@ -30,7 +31,7 @@ interface Message {
   isOwn: boolean;
 }
 
-const ChatView = ({ viewType, user, selectedChat, onSelectChat }: ChatViewProps) => {
+const ChatView = ({ viewType, user, selectedChat, onSelectChat, onViewProfile }: ChatViewProps) => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -151,14 +152,14 @@ const ChatView = ({ viewType, user, selectedChat, onSelectChat }: ChatViewProps)
         {selectedChat ? (
           <>
             <div className="p-4 border-b border-border bg-card flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onViewProfile(selectedChat)}>
                 <Avatar className="w-10 h-10 gradient-primary">
                   <AvatarFallback className="bg-transparent text-white font-semibold">
                     {chats.find(c => c.id === selectedChat)?.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-foreground">
+                  <h3 className="font-semibold text-foreground hover:gradient-text transition-all">
                     {chats.find(c => c.id === selectedChat)?.name}
                   </h3>
                   <p className="text-sm text-muted-foreground">онлайн</p>

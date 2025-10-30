@@ -8,6 +8,7 @@ import Icon from '@/components/ui/icon';
 
 interface SearchViewProps {
   onBack: () => void;
+  onViewProfile: (userId: string) => void;
 }
 
 interface SearchResult {
@@ -19,7 +20,7 @@ interface SearchResult {
   members?: number;
 }
 
-const SearchView = ({ onBack }: SearchViewProps) => {
+const SearchView = ({ onBack, onViewProfile }: SearchViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
 
@@ -130,6 +131,7 @@ const SearchView = ({ onBack }: SearchViewProps) => {
                   {results.map((result) => (
                     <button
                       key={result.id}
+                      onClick={() => result.type === 'user' && onViewProfile(result.id)}
                       className="w-full p-4 rounded-xl hover:bg-muted transition-all text-left"
                     >
                       <div className="flex items-start space-x-4">
@@ -171,6 +173,7 @@ const SearchView = ({ onBack }: SearchViewProps) => {
                   {results.filter(r => r.type === 'user').map((result) => (
                     <button
                       key={result.id}
+                      onClick={() => onViewProfile(result.id)}
                       className="w-full p-4 rounded-xl hover:bg-muted transition-all text-left"
                     >
                       <div className="flex items-center space-x-4">
