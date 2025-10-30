@@ -26,7 +26,7 @@ const Sidebar = ({ activeView, onViewChange, user, onLogout }: SidebarProps) => 
   ];
 
   return (
-    <div className="w-20 bg-card border-r border-border flex flex-col items-center py-6 space-y-6">
+    <div className="w-20 bg-card border-r border-border flex flex-col items-center py-6 space-y-6 shrink-0">
       <div className="relative group cursor-pointer" onClick={() => onViewChange('profile')}>
         <Avatar className="w-12 h-12 gradient-primary glow-effect">
           <AvatarFallback className="bg-transparent text-white font-bold text-lg">

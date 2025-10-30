@@ -24,19 +24,34 @@ const SearchView = ({ onBack, onViewProfile }: SearchViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
 
-  const mockResults: SearchResult[] = [
-    { id: '1', name: 'Иван Петров', type: 'user', description: '@ivan_petrov' },
-    { id: '2', name: 'Команда Разработки', type: 'group', members: 12, lastMessage: 'Встреча в 15:00' },
-    { id: '3', name: 'Новости Tech', type: 'channel', members: 5420, description: 'Технологические новости' },
-    { id: '4', name: 'Космический Чат', type: 'chat', lastMessage: 'Привет! Как дела?' },
-    { id: '5', name: 'Анна Смирнова', type: 'user', description: '@anna_s' },
-  ];
+  const getMockResults = (): SearchResult[] => {
+    const savedChats = localStorage.getItem('messenger_chats');
+    const chats = savedChats ? JSON.parse(savedChats) : [];
+    
+    const chatResults: SearchResult[] = chats.map((chat: any) => ({
+      id: chat.id,
+      name: chat.name,
+      type: chat.type,
+      lastMessage: chat.lastMessage,
+      description: chat.type === 'channel' || chat.type === 'group' ? chat.lastMessage : undefined,
+    }));
+
+    const defaultUsers: SearchResult[] = [
+      { id: 'u1', name: 'Иван Петров', type: 'user', description: '@ivan_petrov' },
+      { id: 'u2', name: 'Анна Смирнова', type: 'user', description: '@anna_s' },
+      { id: 'u3', name: 'Максим Козлов', type: 'user', description: '@max_kozlov' },
+    ];
+
+    return [...chatResults, ...defaultUsers];
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      const filtered = mockResults.filter(result =>
-        result.name.toLowerCase().includes(query.toLowerCase())
+      const allResults = getMockResults();
+      const filtered = allResults.filter(result =>
+        result.name.toLowerCase().includes(query.toLowerCase()) ||
+        (result.description && result.description.toLowerCase().includes(query.toLowerCase()))
       );
       setResults(filtered);
     } else {
@@ -67,7 +82,7 @@ const SearchView = ({ onBack, onViewProfile }: SearchViewProps) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-background">
+    <div className="flex-1 flex flex-col bg-background overflow-hidden">
       <div className="p-4 border-b border-border space-y-4">
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl">
