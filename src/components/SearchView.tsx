@@ -18,13 +18,16 @@ interface SearchResult {
   description?: string;
   lastMessage?: string;
   members?: number;
+  messageText?: string;
+  messageTime?: string;
+  chatId?: string;
 }
 
 const SearchView = ({ onBack, onViewProfile }: SearchViewProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
 
-  const getMockResults = (): SearchResult[] => {
+  const getMockResults = (query: string): SearchResult[] => {
     const savedChats = localStorage.getItem('messenger_chats');
     const chats = savedChats ? JSON.parse(savedChats) : [];
     
@@ -42,16 +45,38 @@ const SearchView = ({ onBack, onViewProfile }: SearchViewProps) => {
       { id: 'u3', name: 'Максим Козлов', type: 'user', description: '@max_kozlov' },
     ];
 
-    return [...chatResults, ...defaultUsers];
+    const messageResults: SearchResult[] = [];
+    chats.forEach((chat: any) => {
+      const chatMessages = localStorage.getItem(`messages_${chat.id}`);
+      if (chatMessages) {
+        const messages = JSON.parse(chatMessages);
+        messages.forEach((msg: any) => {
+          if (msg.text.toLowerCase().includes(query.toLowerCase())) {
+            messageResults.push({
+              id: `msg_${msg.id}`,
+              name: chat.name,
+              type: 'message',
+              messageText: msg.text,
+              messageTime: msg.time,
+              chatId: chat.id,
+              description: `Сообщение в чате ${chat.name}`,
+            });
+          }
+        });
+      }
+    });
+
+    return [...chatResults, ...defaultUsers, ...messageResults];
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      const allResults = getMockResults();
+      const allResults = getMockResults(query);
       const filtered = allResults.filter(result =>
         result.name.toLowerCase().includes(query.toLowerCase()) ||
-        (result.description && result.description.toLowerCase().includes(query.toLowerCase()))
+        (result.description && result.description.toLowerCase().includes(query.toLowerCase())) ||
+        (result.messageText && result.messageText.toLowerCase().includes(query.toLowerCase()))
       );
       setResults(filtered);
     } else {
@@ -163,16 +188,27 @@ const SearchView = ({ onBack, onViewProfile }: SearchViewProps) => {
                               <span>{getTypeLabel(result.type)}</span>
                             </span>
                           </div>
-                          {result.description && (
-                            <p className="text-sm text-muted-foreground">{result.description}</p>
-                          )}
-                          {result.lastMessage && (
-                            <p className="text-sm text-muted-foreground truncate">{result.lastMessage}</p>
-                          )}
-                          {result.members && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {result.members.toLocaleString()} участников
-                            </p>
+                          {result.messageText ? (
+                            <>
+                              <p className="text-sm text-primary/80 mt-1">{result.messageText}</p>
+                              {result.messageTime && (
+                                <p className="text-xs text-muted-foreground mt-1">{result.messageTime}</p>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {result.description && (
+                                <p className="text-sm text-muted-foreground">{result.description}</p>
+                              )}
+                              {result.lastMessage && (
+                                <p className="text-sm text-muted-foreground truncate">{result.lastMessage}</p>
+                              )}
+                              {result.members && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {result.members.toLocaleString()} участников
+                                </p>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
