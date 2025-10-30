@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { ViewType } from './MessengerApp';
+import CreateChatDialog from './CreateChatDialog';
 
 interface ChatViewProps {
   viewType: ViewType;
@@ -35,15 +36,17 @@ const ChatView = ({ viewType, user, selectedChat, onSelectChat, onViewProfile }:
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   useEffect(() => {
-    const mockChats: Chat[] = [
+    const savedChats = localStorage.getItem('messenger_chats');
+    const allChats: Chat[] = savedChats ? JSON.parse(savedChats) : [
       { id: '1', name: 'Космический Чат', lastMessage: 'Привет! Как дела?', time: '14:30', unread: 2, type: 'chat' },
       { id: '2', name: 'Новости Технологий', lastMessage: 'Новый релиз React 19', time: '13:15', type: 'channel' },
       { id: '3', name: 'Команда Разработки', lastMessage: 'Встреча в 15:00', time: '12:00', unread: 5, type: 'group' },
       { id: '4', name: 'Анна Иванова', lastMessage: 'Отправила файл', time: '11:45', type: 'contact' },
     ];
-    setChats(mockChats.filter(chat => chat.type === viewType || (viewType === 'chats' && chat.type === 'chat')));
+    setChats(allChats.filter(chat => chat.type === viewType || (viewType === 'chats' && chat.type === 'chat')));
   }, [viewType]);
 
   useEffect(() => {
@@ -92,8 +95,10 @@ const ChatView = ({ viewType, user, selectedChat, onSelectChat, onViewProfile }:
   };
 
   return (
-    <div className="flex-1 flex">
-      <div className="w-80 border-r border-border flex flex-col bg-card">
+    <div className="flex-1 flex flex-col md:flex-row">
+      <div className={`w-full md:w-80 border-r border-border flex flex-col bg-card ${
+        selectedChat ? 'hidden md:flex' : 'flex'
+      }`}>
         <div className="p-4 border-b border-border">
           <h2 className="text-xl font-bold gradient-text">{getViewTitle()}</h2>
         </div>
@@ -141,28 +146,60 @@ const ChatView = ({ viewType, user, selectedChat, onSelectChat, onViewProfile }:
         </ScrollArea>
         
         <div className="p-4 border-t border-border">
-          <Button className="w-full gradient-primary glow-effect">
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full gradient-primary glow-effect">
             <Icon name="Plus" size={20} className="mr-2" />
             Новый {viewType === 'channels' ? 'канал' : viewType === 'groups' ? 'группа' : 'чат'}
           </Button>
         </div>
+        
+        <CreateChatDialog
+          open={isCreateDialogOpen}
+          onClose={() => setIsCreateDialogOpen(false)}
+          type={viewType === 'channels' ? 'channel' : viewType === 'groups' ? 'group' : 'chat'}
+          onCreateChat={(name, description) => {
+            const newChat: Chat = {
+              id: Date.now().toString(),
+              name,
+              lastMessage: description || 'Чат создан',
+              time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+              type: viewType === 'channels' ? 'channel' : viewType === 'groups' ? 'group' : 'chat',
+            };
+            const savedChats = localStorage.getItem('messenger_chats');
+            const allChats: Chat[] = savedChats ? JSON.parse(savedChats) : [];
+            const updatedChats = [newChat, ...allChats];
+            localStorage.setItem('messenger_chats', JSON.stringify(updatedChats));
+            setChats([newChat, ...chats]);
+          }}
+        />
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col ${
+        selectedChat ? 'flex' : 'hidden md:flex'
+      }`}>
         {selectedChat ? (
           <>
             <div className="p-4 border-b border-border bg-card flex items-center justify-between">
-              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onViewProfile(selectedChat)}>
-                <Avatar className="w-10 h-10 gradient-primary">
-                  <AvatarFallback className="bg-transparent text-white font-semibold">
-                    {chats.find(c => c.id === selectedChat)?.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold text-foreground hover:gradient-text transition-all">
-                    {chats.find(c => c.id === selectedChat)?.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">онлайн</p>
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onSelectChat(null)}
+                  className="md:hidden rounded-xl"
+                >
+                  <Icon name="ArrowLeft" size={24} />
+                </Button>
+                <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onViewProfile(selectedChat)}>
+                  <Avatar className="w-10 h-10 gradient-primary">
+                    <AvatarFallback className="bg-transparent text-white font-semibold">
+                      {chats.find(c => c.id === selectedChat)?.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold text-foreground hover:gradient-text transition-all">
+                      {chats.find(c => c.id === selectedChat)?.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">онлайн</p>
+                  </div>
                 </div>
               </div>
               <div className="flex space-x-2">
